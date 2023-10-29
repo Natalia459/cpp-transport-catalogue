@@ -13,12 +13,12 @@ namespace transport_catalogue {
 			double dist;
 		};
 
-		void Data(std::istream&, TransportCatalogue&);
+		void Data(std::istream& in, TransportCatalogue& catalogue);
 
-		void Stop(TransportCatalogue&, std::string&&, std::vector<DistanceForStops>&);
+		void Stop(TransportCatalogue& catalogue, std::string&& line, std::vector<DistanceForStops>& stop_distances);
 
-		void Bus(TransportCatalogue&, std::string&&);
+		void Bus(TransportCatalogue& catalogue, std::string&& line);
 
-		void Distances(TransportCatalogue&, std::string&&, std::string&&, double);
+		void Distances(TransportCatalogue& catalogue, std::string&& stop, std::string&& another_stop, double dist);
 	}
 }

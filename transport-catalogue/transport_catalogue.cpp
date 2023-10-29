@@ -10,7 +10,7 @@ using namespace transport_catalogue;
 using namespace details;
 using namespace types;
 
-//добавляет остановку в в деку, 
+// добавляет остановку в в деку, 
 // из деки адрес остановки добавляется в мапу
 // функция возвращает предыдущий элемент, добавленный в деку, если он есть, иначе возвращает добавленный элемент
 Stops* TransportCatalogue::AddStop(string& name, double lat, double lon) {
@@ -34,8 +34,8 @@ Stops* TransportCatalogue::FindStop(string_view name) {
 // добавляет автобус с его маршрутом следования в деку,
 // из деки адрес элемента добавляется в мапу
 // функция возвращает предыдущий элемент, добавленный в деку, если он есть, иначе возвращает добавленный элемент
-Buses* TransportCatalogue::AddBus(string&& name, vector<Stops*> route, string&& type) {
-	stat_buses_.push_back({ name, route, type });
+Buses* TransportCatalogue::AddBus(string&& name, vector<Stops*>&& stops, bool is_circle) {
+	stat_buses_.push_back({ name, stops, is_circle });
 	buses_[stat_buses_.back().name] = &stat_buses_.back();
 
 	return &*(stat_buses_.end() - 1);
@@ -56,14 +56,14 @@ void TransportCatalogue::AddDistance(PairStops stops, double dist) {
 }
 
 
-std::tuple<bool, int, int, double, double> TransportCatalogue::GetBusInfo(std::string_view name) {
+std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) {
 	auto bus = buses_.find(name);
 	bool found = true;
 
 	//такого автобуса нет
 	if (bus == buses_.end()) {
 		found = false;
-		return make_tuple(found, 0, 0, 0, 0);
+		return make_pair(found, BusInfo{ 0, 0, 0, 0 });
 	}
 
 	int routes = static_cast<int>(bus->second->route.size());
@@ -89,7 +89,8 @@ std::tuple<bool, int, int, double, double> TransportCatalogue::GetBusInfo(std::s
 	}
 	uniq.insert(stops.back());
 
-	if (bus->second->type == "linear"s) {
+	//if route is linear
+	if (bus->second->is_circle == false) {
 		length *= 2;
 		routes = routes * 2 - 1;
 		curv += lin_curv;
@@ -97,11 +98,12 @@ std::tuple<bool, int, int, double, double> TransportCatalogue::GetBusInfo(std::s
 	double trtr = curv;
 	curv /= length;
 	int uni = static_cast<int>(uniq.size());
-	return make_tuple(found, routes, uni, trtr, curv);
+
+	return make_pair(found, BusInfo{ routes, uni, trtr, curv });
 }
 
 
-std::tuple<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(std::string_view stop) {
+std::pair<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(std::string_view stop) {
 	auto st = FindStop(stop);
 	vector<string_view> buses;
 	bool exists = true;
@@ -109,7 +111,7 @@ std::tuple<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(
 	//остановки нет
 	if (st == nullptr) {
 		exists = false;
-		return make_tuple(exists, buses);
+		return make_pair(exists, buses);
 	}
 
 	for (auto& [bus_name, bus] : buses_) {
@@ -120,7 +122,7 @@ std::tuple<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(
 	}
 
 	//остановка может существовать, но через нее не будут ездить автобусы
-	return make_tuple(exists, buses);
+	return make_pair(exists, buses);
 }
 
 

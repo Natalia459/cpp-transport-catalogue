@@ -18,7 +18,7 @@ namespace transport_catalogue {
 		struct Buses {
 			std::string name;
 			std::vector<Stops*> route;
-			std::string type; //"circle" or "linear"
+			bool is_circle; // if not "circle" then "linear"
 		};
 
 		struct PairStops {
@@ -37,6 +37,13 @@ namespace transport_catalogue {
 		private:
 			std::hash<Stops*> stops_hasher_{};
 		};
+
+		struct BusInfo {
+			int routes;
+			int unic_routes;
+			double length;
+			double curv;
+		};
 	}
 
 	class TransportCatalogue {
@@ -51,21 +58,20 @@ namespace transport_catalogue {
 
 	public:
 
-		types::Stops* AddStop(std::string&, double, double);
+		types::Stops* AddStop(std::string& name, double lat, double lon);
 
-		types::Stops* FindStop(std::string_view);
+		types::Stops* FindStop(std::string_view name);
 
-		std::tuple<bool, std::vector<std::string_view>> GetStopInfo(std::string_view);
+		std::pair<bool, std::vector<std::string_view>> GetStopInfo(std::string_view name);
 
+		types::Buses* AddBus(std::string&& name, std::vector<types::Stops*>&& stops, bool is_circle);
 
-		types::Buses* AddBus(std::string&&, std::vector<types::Stops*>, std::string&& type = "circle");
+		types::Buses* FindBus(std::string_view name);
 
-		types::Buses* FindBus(std::string_view);
+		std::pair<bool, types::BusInfo> GetBusInfo(std::string_view name);
 
-		std::tuple<bool, int, int, double, double> GetBusInfo(std::string_view);
-
-		void AddDistance(types::PairStops, double);
-
+		void AddDistance(types::PairStops stops, double dist);
+		 
 		double GetDistanceInfo(types::PairStops stops);
 
 		std::vector<std::string> GetAllBuses();

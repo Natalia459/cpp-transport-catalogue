@@ -7,10 +7,10 @@ namespace transport_catalogue {
 
 	namespace output {
 
-		void Request(std::istream&, std::ostream&, TransportCatalogue&);
+		void Request(std::istream& in, std::ostream& out, TransportCatalogue& catalogue);
 
-		void StopsForBus(std::ostream&, std::string&&, TransportCatalogue&);
+		void StopsForBus(std::ostream& out, std::string&& bus, TransportCatalogue& catalogue);
 
-		void BusesToStop(std::ostream&, std::string&&, TransportCatalogue&);
+		void BusesToStop(std::ostream& out, std::string&& stop, TransportCatalogue& catalogue);
 	}
 }

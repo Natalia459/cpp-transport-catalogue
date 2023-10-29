@@ -36,13 +36,13 @@ void output::Request(istream& fin, ostream& fout, TransportCatalogue& cat) {
 void output::StopsForBus(ostream& fout, string&& bus, TransportCatalogue& cat) {
 
 	fout << "Bus "s << bus << ": ";
-	auto [found, stops, uniq, length, curv] = cat.GetBusInfo(bus);
+	auto [found, info] = cat.GetBusInfo(bus);
 
 	if (found) {
-		fout << stops << " stops on route, "
-			<< uniq << " unique stops, "
-			<< std::setprecision(6) << length << " route length, "
-			<< std::setprecision(6) << curv << " curvature\n";
+		fout << info.routes << " stops on route, "
+			<< info.unic_routes << " unique stops, "
+			<< std::setprecision(6) << info.length << " route length, "
+			<< std::setprecision(6) << info.curv << " curvature\n";
 	}
 	else {
 		fout << "not found\n";

@@ -64,7 +64,7 @@ void input::Stop(TransportCatalogue& catal, std::string&& line, vector<DistanceF
 	line = line.substr(comma + 1);
 
 	comma = line.find(',');
-	while (comma != line.npos){
+	while (comma != line.npos) {
 		space = line.find(' ');
 		double dist = stod(line.substr(0, space - 1));
 		space += 4;
@@ -73,7 +73,7 @@ void input::Stop(TransportCatalogue& catal, std::string&& line, vector<DistanceF
 		stop_distances.push_back({ stop_name, another_stop_name, dist });
 		line = line.substr(comma + 2);
 		comma = line.find(',');
-	} 
+	}
 	space = line.find(' ');
 	double dist = stod(line.substr(0, space - 1));
 	space += 4;
@@ -103,7 +103,7 @@ void input::Bus(TransportCatalogue& catal, std::string&& line) {
 	vector<Stops*> stops;
 	size_t divider = line.find_first_of(sign);
 
-	while (divider != line.npos){
+	while (divider != line.npos) {
 		string stop = line.substr(0, divider - 1);
 		auto pointer = catal.FindStop(stop);
 		stops.push_back(pointer);
@@ -115,10 +115,11 @@ void input::Bus(TransportCatalogue& catal, std::string&& line) {
 	auto pointer = catal.FindStop(stop);
 	stops.push_back(pointer);
 
-
+	//if route is linear
 	if (sign == '-') {
-		catal.AddBus(move(name), move(stops), "linear");
-		return;
+		catal.AddBus(move(name), move(stops), /*is_circle =*/ false);
 	}
-	catal.AddBus(move(name), move(stops));
+	else {
+		catal.AddBus(move(name), move(stops), /*is_circle =*/ true);
+	}
 }

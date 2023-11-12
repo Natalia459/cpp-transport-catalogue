@@ -10,9 +10,9 @@ using namespace transport_catalogue;
 using namespace details;
 using namespace types;
 
-// добавляет остановку в в деку, 
-// из деки адрес остановки добавляется в мапу
-// функция возвращает предыдущий элемент, добавленный в деку, если он есть, иначе возвращает добавленный элемент
+// adds a stop to deque,
+// from the deque the address of the stop is added to the map
+// the function returns the added stop
 Stops* TransportCatalogue::AddStop(string& name, double lat, double lon) {
 	stat_stops_.push_back({ name, lat, lon });
 	stops_[stat_stops_.back().name] = &stat_stops_.back();
@@ -31,9 +31,9 @@ Stops* TransportCatalogue::FindStop(string_view name) {
 
 
 
-// добавляет автобус с его маршрутом следования в деку,
-// из деки адрес элемента добавляется в мапу
-// функция возвращает предыдущий элемент, добавленный в деку, если он есть, иначе возвращает добавленный элемент
+// adds a bus with its route to deque,
+// from the deque the address of the bus is added to the map
+// the function returns the added bus
 Buses* TransportCatalogue::AddBus(string&& name, vector<Stops*>&& stops, bool is_circle) {
 	stat_buses_.push_back({ name, stops, is_circle });
 	buses_[stat_buses_.back().name] = &stat_buses_.back();
@@ -60,7 +60,7 @@ std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) {
 	auto bus = buses_.find(name);
 	bool found = true;
 
-	//такого автобуса нет
+	//there is no such bus
 	if (bus == buses_.end()) {
 		found = false;
 		return make_pair(found, BusInfo{ 0, 0, 0, 0 });
@@ -72,7 +72,7 @@ std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) {
 	double length = 0;
 	double curv = 0, lin_curv = 0;
 
-	for (int i = 1; i < stops.size(); ++i) {
+	for (size_t i = 1; i < stops.size(); ++i) {
 		Coordinates coo{ stops[i - 1]->lati, stops[i - 1]->longi };
 		Coordinates ecoo{ stops[i]->lati, stops[i]->longi };
 
@@ -108,48 +108,52 @@ std::pair<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(s
 	vector<string_view> buses;
 	bool exists = true;
 
-	//остановки нет
+	//no such stop
 	if (st == nullptr) {
 		exists = false;
 		return make_pair(exists, buses);
 	}
 
 	for (auto& [bus_name, bus] : buses_) {
-		//автобус из базы проезжает через эту остановку
+		//the bus from the base passes through this stop
 		if (find(bus->route.begin(), bus->route.end(), st) != bus->route.end()) {
 			buses.push_back(bus_name);
 		}
 	}
 
-	//остановка может существовать, но через нее не будут ездить автобусы
+	//the stop may exist, but buses will not travel through it
 	return make_pair(exists, buses);
 }
 
 
 double TransportCatalogue::GetDistanceInfo(PairStops stops) {
 
-	//если между А-В и В-А разные расстояния
+	//if between a-b and b-a are different distances
 	auto found = distance_.find(stops);
 	if (found != distance_.end()) {
 		return distance_.at(stops);
 	}
 
-	//если А-В == В-А
+	//id a-b == b-a
 	found = distance_.find({ stops.second, stops.first });
 	if (found != distance_.end()) {
 		return distance_.at({ stops.second, stops.first });
 	}
 
-	//остановок нет
+	//no stops
 	return 0;
 }
 
 
-//для тестов
-std::vector<std::string> TransportCatalogue::GetAllBuses() {
-	vector<std::string> all_buses;
-	for (auto& [name, route] : buses_) {
-		all_buses.push_back(string(name));
+std::vector<types::Buses*> TransportCatalogue::GetAllBuses() const {
+	std::vector<types::Buses*> buses;
+	for (const auto& [str_view, bus] : buses_) {
+		buses.push_back(bus);
 	}
-	return all_buses;
+	std::sort(buses.begin(), buses.end(), [](const auto& lhs, const auto& rhs)
+		{
+			return lhs->name < rhs->name;
+		});
+
+	return buses;
 }

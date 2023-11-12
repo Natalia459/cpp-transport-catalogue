@@ -1,24 +1,14 @@
-﻿//#include "tests.h"
-
-#include "transport_catalogue.h"
-#include "input_reader.h"
-#include "stat_reader.h"
-
+﻿#include "transport_catalogue.h"
+#include "json_reader.h"
+#include "map_renderer.h"
 #include <iostream>
 
 using namespace std;
 using namespace transport_catalogue;
 using namespace input;
-using namespace output;
+using namespace picture;
 
-
-int main()
-{
-	//tests::Tests();
+int main() {
 	TransportCatalogue cat;
-	
-	Data(std::cin, cat);
-	Request(std::cin, std::cout, cat);
-
-	return 0;
+	Data(std::cin, std::cout, cat);
 }

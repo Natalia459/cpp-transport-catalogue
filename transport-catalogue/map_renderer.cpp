@@ -13,7 +13,20 @@ Renderer picture::GetRenderSettings(const json::Dict& settings, const std::vecto
 	if (settings.empty()) {
 		return Renderer{};
 	}
-	return RenderSettings(move(sett), data);
+
+	vector<details::Coordinates> coord;
+	for (const auto& bus : data) {
+		if (!bus->route.empty()) {
+			for (const auto& stop : bus->route) {
+				coord.push_back({ stop->lati, stop->longi });
+			}
+		}
+	}
+	SphereProjector projector(coord.begin(), coord.end(), sett.max_width, sett.max_height, sett.padding);
+
+	Renderer rend(sett, projector);
+	rend.RenderSettings(data);
+	return rend;
 }
 
 Color picture::ReadColor(json::Node color) {
@@ -35,24 +48,14 @@ Color picture::ReadColor(json::Node color) {
 	return Rgb{ red, green, blue };
 }
 
-Renderer picture::RenderSettings(Settings&& settings, const std::vector<types::Buses*>& data) {
-	vector<details::Coordinates> coord;
-	for (const auto& bus : data) {
-		if (!bus->route.empty()) {
-			for (const auto& stop : bus->route) {
-				coord.push_back({ stop->lati, stop->longi });
-			}
-		}
-	}
-	SphereProjector projector(coord.begin(), coord.end(), settings.max_width, settings.max_height, settings.padding);
+void picture::Renderer::RenderSettings(const std::vector<types::Buses*>& data) {
 
-	Renderer rends(settings);
 	map<string, svg::Point> stops;
 	vector<BusInfo> buses;
 	size_t color_number = 0;
 
 	for (const auto& bus : data) {
-		if (color_number == settings.color_palette.size()) {
+		if (color_number == settings_.color_palette.size()) {
 			color_number = 0;
 		}
 		if (bus->route.empty()) {
@@ -63,7 +66,7 @@ Renderer picture::RenderSettings(Settings&& settings, const std::vector<types::B
 		for (const auto& stop : bus->route) {
 			const auto lat = stop->lati;
 			const auto lon = stop->longi;
-			Point curr = projector({ lat, lon });
+			Point curr = projector_({ lat, lon });
 
 			coordinates.push_back(curr);
 			stops.emplace(stop->name, curr);
@@ -80,17 +83,15 @@ Renderer picture::RenderSettings(Settings&& settings, const std::vector<types::B
 				coordinates.push_back(*stop);
 			}
 		}
-		rends.AddPolylinePoints(move(coordinates), color_number);
+		AddPolylinePoints(move(coordinates), color_number);
 		++color_number;
 	}
-	rends.AddBusTextes(move(buses));
-	rends.AddCirclePoints(stops);
-	rends.AddStopTextes(stops);
-
-	return rends;
+	AddBusTextes(move(buses));
+	AddCirclePoints(stops);
+	AddStopTextes(stops);
 }
 
-void transport_catalogue::RenderVector(std::ostream& out, const picture::Renderer& rend) {
+void picture::RenderVector(std::ostream& out, const picture::Renderer& rend) {
 	svg::Document result;
 	for (const auto& line : rend.GetPolyline()) {
 		result.Add(line);

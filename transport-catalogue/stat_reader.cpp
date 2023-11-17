@@ -9,7 +9,7 @@ using namespace transport_catalogue;
 using namespace output;
 
 
-void output::Request(istream& fin, ostream& fout, TransportCatalogue& cat) {
+void output::GetRequest(istream& fin, ostream& fout, TransportCatalogue& cat) {
 	int amount;
 	fin >> amount;
 
@@ -24,23 +24,23 @@ void output::Request(istream& fin, ostream& fout, TransportCatalogue& cat) {
 		string type = name.substr(0, n++);
 		name = name.substr(n);
 		if (type == "Bus"s) {
-			StopsForBus(fout, move(name), cat);
+			Bus(fout, move(name), cat);
 		}
 		else {
-			BusesToStop(fout, move(name), cat);
+			Stop(fout, move(name), cat);
 		}
 	}
 }
 
 
-void output::StopsForBus(ostream& fout, string&& bus, TransportCatalogue& cat) {
+void output::Bus(ostream& fout, string&& bus, TransportCatalogue& cat) {
 
 	fout << "Bus "s << bus << ": ";
 	auto [found, info] = cat.GetBusInfo(bus);
 
 	if (found) {
-		fout << info.routes << " stops on route, "
-			<< info.unic_routes << " unique stops, "
+		fout << info.stops << " stops on route, "
+			<< info.uniq_stops << " unique stops, "
 			<< std::setprecision(6) << info.length << " route length, "
 			<< std::setprecision(6) << info.curv << " curvature\n";
 	}
@@ -50,7 +50,7 @@ void output::StopsForBus(ostream& fout, string&& bus, TransportCatalogue& cat) {
 }
 
 
-void output::BusesToStop(std::ostream& fout, string&& stop, TransportCatalogue& cat) {
+void output::Stop(std::ostream& fout, string&& stop, TransportCatalogue& cat) {
 
 	fout << "Stop "s << stop << ": ";
 	auto [exists, buses] = cat.GetStopInfo(stop);

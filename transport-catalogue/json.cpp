@@ -579,7 +579,6 @@ void print::PrintValue(const Node::Value& val, const PrintContext& ctx) {
 		ctx.out << get<int>(val);
 	}
 	else if (holds_alternative<double>(val)) {
-		//string num = DeleteZeros(get<double>(val));
 		ctx.out << get<double>(val);
 	}
 	else if (holds_alternative<bool>(val)) {
@@ -591,30 +590,30 @@ void print::PrintValue(const Node::Value& val, const PrintContext& ctx) {
 		ctx.out << "\""sv << res << "\""sv;
 	}
 	else if (holds_alternative<Array>(val)) {
-		ctx.out << " ["sv;
-		ctx.out << std::endl;
+		bool is_not_first = false;
+
+		ctx.out << "["sv<< std::endl;
 		const PrintContext new_pt = ctx.Indented();
+
 		auto vec = get<Array>(val);
-		bool is_first = true;
+
 		for (const auto& v : vec) {
-			if (!is_first) {
+			if (is_not_first) {
 				ctx.out << ","sv << std::endl;
 			}
 			new_pt.PrintIndent();
+			is_not_first = true;
 			std::visit(
 				[&ctx, &new_pt](const Node::Value& v) { PrintValue(v, new_pt); },
 				v.GetValue());
-			is_first = false;
 		}
 		ctx.out << std::endl;
-		new_pt.PrintIndent();
+		ctx.PrintIndent();
 		ctx.out << "]"sv;
 	}
 	else if (holds_alternative<Dict>(val)) {
 		bool is_not_first = false;
 
-		ctx.out << std::endl;
-		ctx.PrintIndent();
 		ctx.out << "{"sv << std::endl;
 		const PrintContext new_pt = ctx.Indented();
 
@@ -623,15 +622,15 @@ void print::PrintValue(const Node::Value& val, const PrintContext& ctx) {
 			if (is_not_first) {
 				ctx.out << ","sv << std::endl;
 			}
-			is_not_first = true;
 			new_pt.PrintIndent();
+			is_not_first = true;
 			ctx.out << "\""sv << key << "\": "sv;
 			std::visit(
 				[&ctx, &new_pt](const Node::Value& v) { PrintValue(v, new_pt); },
 				v.GetValue());
 		}
 		ctx.out << std::endl;
-		new_pt.PrintIndent();
+		ctx.PrintIndent();
 		ctx.out << "}"sv;
 	}
 }

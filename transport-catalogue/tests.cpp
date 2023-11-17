@@ -12,8 +12,6 @@
 using namespace std;
 using namespace transport_catalogue;
 using namespace types;
-using namespace input;
-using namespace output;
 using namespace tests;
 
 double EPSILON = 0.000001;
@@ -36,7 +34,8 @@ void for_json::Test1() {
 		fout.open("out1", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test1", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -56,7 +55,8 @@ void for_json::Test2() {
 
 		if (fout) {
 			LOG_DURATION_STREAM("Test2", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -86,7 +86,8 @@ void for_svg::Test1() {
 		fout.open("out_svg1", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_SVG_1", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -105,7 +106,8 @@ void for_svg::Test20() {
 		fout.open("out_svg20", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_SVG_20", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -124,7 +126,8 @@ void for_svg::Test21() {
 		fout.open("out_svg21", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_SVG_21", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -143,7 +146,8 @@ void for_svg::Test23() {
 		fout.open("out_svg23", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_SVG_23", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -162,7 +166,8 @@ void for_svg::Test2() {
 		fout.open("out_svg2", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_SVG_23", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -181,7 +186,8 @@ void for_svg::TestFull23() {
 		fout.open("out_svg_full_23", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_SVG_23", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -209,7 +215,8 @@ void finall::TestShort() {
 		fout.open("out_full_short", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_FULL_SHORT", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -228,7 +235,8 @@ void finall::Test1() {
 		fout.open("out_full_1", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_FULL_1", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -247,7 +255,8 @@ void finall::Test2() {
 		fout.open("out_full_2", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_FULL_2", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 
@@ -266,7 +275,8 @@ void finall::Test3() {
 		fout.open("out_full_3", 'w');
 		if (fout) {
 			LOG_DURATION_STREAM("Test_FULL_3", std::cerr);
-			transport_catalogue::Data(fin, fout, cat);
+			JSONReader reader(cat);
+			reader.ProcessData(fin, fout);
 		}
 	}
 

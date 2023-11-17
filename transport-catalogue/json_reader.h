@@ -6,22 +6,32 @@
 
 namespace transport_catalogue {
 
-	void Data(std::istream& in, std::ostream& out, TransportCatalogue& catalogue);
-
-	namespace input {
-
+	class JSONReader {
+	public:
 		struct DistanceForStops {
 			std::string first;
 			std::string second;
 			double dist;
 		};
 
-		std::vector<types::Buses*> AddData(const json::Array& data, TransportCatalogue& catalogue);
 
-		void Stop(const json::Dict& stop, TransportCatalogue& catalogue);
+		JSONReader(TransportCatalogue& catalogue)
+			:catalogue_(catalogue)
+		{
+		}
 
-		void Bus(const json::Dict& bus, TransportCatalogue& catalogue);
+		void ProcessData(std::istream& in, std::ostream& out);
 
-		void Distances(std::string&& stop, std::string&& another_stop, double dist, TransportCatalogue& catalogue);
-	}
+		std::vector<types::Buses*> AddData(const json::Array& data);
+
+	private:
+		TransportCatalogue& catalogue_;
+
+
+		void Stop(const json::Dict& stop);
+
+		void Bus(const json::Dict& bus);
+
+		void Distances(std::string&& stop, std::string&& another_stop, double dist);
+	};
 }

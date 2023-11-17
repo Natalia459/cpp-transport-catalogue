@@ -11,14 +11,13 @@
 using namespace std;
 using namespace transport_catalogue;
 using namespace types;
-using namespace input;
 using namespace json;
 
 
 //================================================================================================= INPUT
 
 
-void transport_catalogue::Data(std::istream& in, std::ostream& out, TransportCatalogue& catal) {
+void JSONReader::ProcessData(std::istream& in, std::ostream& out) {
 	const Document doc = json::Load(in);
 	json::Dict render_data;
 	json::Array request_data;
@@ -27,7 +26,7 @@ void transport_catalogue::Data(std::istream& in, std::ostream& out, TransportCat
 	for (const auto& [request_type, data] : doc.GetRoot().AsMap()) {
 
 		if (request_type == "base_requests"s) {
-			buses = move(AddData(data.AsArray(), catal));
+			buses = move(AddData(data.AsArray()));
 		}
 		else if (request_type == "stat_requests") {
 			request_data = data.AsArray();
@@ -39,18 +38,19 @@ void transport_catalogue::Data(std::istream& in, std::ostream& out, TransportCat
 
 	if (render_data.empty() == false) {
 		if (request_data.empty() == false) {
-			output::GetRequest(out, request_data, picture::GetRenderSettings(render_data, buses), catal);
+			RequestHandler handler(catalogue_);
+			handler.GetRequest(out, request_data, picture::GetRenderSettings(render_data, buses));
 		}
 	}
 }
 
-std::vector<types::Buses*> input::AddData(const Array& data, TransportCatalogue& catalogue) {
+std::vector<types::Buses*> JSONReader::AddData(const Array& data) {
 	vector<DistanceForStops> dists;
 	vector<json::Dict> buses;
 
 	for (const auto& info : data) {
 		if (info.AsMap().at("type"s).AsString() == "Stop"s) {
-			Stop(info.AsMap(), catalogue);
+			Stop(info.AsMap());
 			auto stop = info.AsMap();
 			Dict road_dists = stop.at("road_distances"s).AsMap();
 			string first_stop = stop.at("name"s).AsString();
@@ -65,35 +65,35 @@ std::vector<types::Buses*> input::AddData(const Array& data, TransportCatalogue&
 	}
 
 	for (auto bus : buses) {
-		Bus(bus, catalogue);
+		Bus(bus);
 	}
 
 	for (auto [first_stop, second_stop, dist] : dists) {
-		Distances(move(first_stop), move(second_stop), dist, catalogue);
+		Distances(move(first_stop), move(second_stop), dist);
 	}
 
-	return catalogue.GetAllBuses();
+	return catalogue_.GetAllBuses();
 }
 
-void input::Stop(const json::Dict& stop, TransportCatalogue& catalogue) {
+void JSONReader::Stop(const json::Dict& stop) {
 
 	string name = stop.at("name"s).AsString();
 	double lat = stop.at("latitude").AsDouble();
 	double lon = stop.at("longitude").AsDouble();
 
-	catalogue.AddStop(name, lat, lon);
+	catalogue_.AddStop(name, lat, lon);
 }
 
 
-void input::Distances(std::string&& stop, std::string&& another_stop, double dist, TransportCatalogue& catalogue) {
-	Stops* stop1 = catalogue.FindStop(stop);
-	Stops* stop2 = catalogue.FindStop(another_stop);
+void JSONReader::Distances(std::string&& stop, std::string&& another_stop, double dist) {
+	Stops* stop1 = catalogue_.FindStop(stop);
+	Stops* stop2 = catalogue_.FindStop(another_stop);
 
-	catalogue.AddDistance({ stop1, stop2 }, dist);
+	catalogue_.AddDistance({ stop1, stop2 }, dist);
 }
 
 
-void input::Bus(const json::Dict& bus, TransportCatalogue& catalogue) {
+void JSONReader::Bus(const json::Dict& bus) {
 	if (bus.empty()) {
 		return;
 	}
@@ -104,7 +104,7 @@ void input::Bus(const json::Dict& bus, TransportCatalogue& catalogue) {
 
 	std::vector<types::Stops*> stops_ptr;
 	for (const auto& stop : stops) {
-		stops_ptr.push_back(catalogue.FindStop(stop.AsString()));
+		stops_ptr.push_back(catalogue_.FindStop(stop.AsString()));
 	}
-	catalogue.AddBus(move(name), move(stops_ptr), is_round);
+	catalogue_.AddBus(move(name), move(stops_ptr), is_round);
 }

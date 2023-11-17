@@ -1,6 +1,6 @@
 #pragma once
 #include "transport_catalogue.h"
-#include  "map_renderer.h"
+#include "map_renderer.h"
 #include "json.h"
 
 #include <string_view>
@@ -8,12 +8,22 @@
 
 namespace transport_catalogue {
 
-	namespace output {
+	class RequestHandler {
+	public:
+		RequestHandler(TransportCatalogue& catalogue)
+			:catalogue_(catalogue)
+		{
+		}
 
-		void GetRequest(std::ostream& out, const std::vector<json::Node>& requests, picture::Renderer, TransportCatalogue& catalogue);
+		void GetRequest(std::ostream& out, const std::vector<json::Node>& requests, picture::Renderer);
 
-		json::Dict Bus(int id, std::string&& bus, TransportCatalogue& catalogue);
+	private:
+		TransportCatalogue& catalogue_;
+		json::Array req_answer_ = json::Array{};
 
-		json::Dict Stop(int id,  std::string&& stop, TransportCatalogue& catalogue);
-	}
+
+		void Bus(int id, std::string&& bus);
+
+		void Stop(int id, std::string&& stop);
+	};
 }

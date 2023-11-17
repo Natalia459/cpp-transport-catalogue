@@ -11,15 +11,13 @@
 using namespace std;
 
 using namespace transport_catalogue;
-using namespace output;
 using namespace types;
 
 
 //================================================================================================= OUTPUT
 
 
-void output::GetRequest(std::ostream& out, const std::vector<json::Node>& requests, picture::Renderer render, TransportCatalogue& catalogue) {
-	json::Array res;
+void RequestHandler::GetRequest(std::ostream& out, const std::vector<json::Node>& requests, picture::Renderer render) {
 
 	for (const auto& info : requests) {
 		if (info.AsMap().empty()) {
@@ -29,29 +27,27 @@ void output::GetRequest(std::ostream& out, const std::vector<json::Node>& reques
 
 		if (info.AsMap().at("type"s).AsString() == "Bus"s) {
 			string name = info.AsMap().at("name"s).AsString();
-			auto bus = Bus(id, move(name), catalogue);
-			res.push_back(bus);
+			Bus(id, move(name));
 		}
 		else if (info.AsMap().at("type"s).AsString() == "Stop"s) {
 			string name = info.AsMap().at("name"s).AsString();
-			auto stop = Stop(id, move(name), catalogue);
-			res.push_back(stop);
+			Stop(id, move(name));
 		}
 		else if (info.AsMap().at("type"s).AsString() == "Map"s) {
 			std::ostringstream ostr;
-			RenderVector(ostr, render);
-			
-			json::Dict mapa = { {"map"s, ostr.str()}, {"request_id"s, id}};
-			res.push_back(mapa);
+			picture::RenderVector(ostr, render);
+
+			json::Dict mapa = { {"map"s, ostr.str()}, {"request_id"s, id} };
+			req_answer_.push_back(mapa);
 		}
 	}
-	json::Print(json::Document{ res }, out);
+	json::Print(json::Document{ req_answer_ }, out);
 }
 
 
-json::Dict output::Bus(int id, std::string&& bus, TransportCatalogue& catalogue) {
+void RequestHandler::Bus(int id, std::string&& bus) {
 
-	auto [exists, info] = catalogue.GetBusInfo(move(bus));
+	auto [exists, info] = catalogue_.GetBusInfo(move(bus));
 	if (exists) {
 		json::Dict bus_info;
 
@@ -61,17 +57,17 @@ json::Dict output::Bus(int id, std::string&& bus, TransportCatalogue& catalogue)
 		bus_info.emplace("stop_count"s, info.stops);
 		bus_info.emplace("unique_stop_count"s, info.uniq_stops);
 
-		return bus_info;
+		req_answer_.push_back( bus_info);
 	}
 	else {
-		return json::Dict{ { "request_id"s, id}, {"error_message"s, "not found"s} };
+		req_answer_.push_back( json::Dict{ { "request_id"s, id}, {"error_message"s, "not found"s} });
 	}
 }
 
 
-json::Dict output::Stop(int id, string&& stop, TransportCatalogue& catalogue) {
+void RequestHandler::Stop(int id, string&& stop) {
 
-	auto [exists, buses] = catalogue.GetStopInfo(move(stop));
+	auto [exists, buses] = catalogue_.GetStopInfo(move(stop));
 	if (exists) {
 		json::Array buses_json;
 		std::sort(buses.begin(), buses.end());
@@ -81,9 +77,9 @@ json::Dict output::Stop(int id, string&& stop, TransportCatalogue& catalogue) {
 
 		json::Dict stop_info{ {"buses"s, buses_json}, {"request_id"s, id} };
 
-		return stop_info;
+		req_answer_.push_back( stop_info);
 	}
 	else {
-		return json::Dict{ { "request_id"s, id}, {"error_message"s, "not found"s} };
+		req_answer_.push_back( json::Dict{ { "request_id"s, id}, {"error_message"s, "not found"s} });
 	}
 }

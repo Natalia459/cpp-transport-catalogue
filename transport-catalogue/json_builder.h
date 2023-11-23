@@ -8,11 +8,11 @@
 
 namespace json {
 
-	class ItemContext;
-	class KeyItemContext;
+	class MethContext;
+	class KeyContext;
 	class ValueContext;
-	class DictItemContext;
-	class ArrayItemContext;
+	class DictContext;
+	class ArrayContext;
 
 	class Builder {
 	private:
@@ -20,13 +20,14 @@ namespace json {
 		std::vector<json::Node*> nodes_stack_;
 
 		template <typename T>
-		void InputResult(T elem) {
-			if (nodes_stack_.back()->IsArray()) {
-				const_cast<json::Array&>(nodes_stack_.back()->AsArray()).push_back(elem);
-				nodes_stack_.emplace_back(&const_cast<json::Array&>(nodes_stack_.back()->AsArray()).back());
+		void InputArrayOrDict(T elem) {
+            auto& last = nodes_stack_.back();
+			if (last->IsArray()) {
+				const_cast<json::Array&>(last->AsArray()).push_back(elem);
+				nodes_stack_.emplace_back(&(last->AsArray()).back());
 			}
 			else {
-				*nodes_stack_.back() = elem;
+				*last = elem;
 			}
 		}
 
@@ -35,64 +36,64 @@ namespace json {
 			nodes_stack_.emplace_back(&root_);
 		}
 
-        KeyItemContext Key(std::string&& key);
+        KeyContext Key(std::string&& key);
 
 		Builder& Value(json::Node&& value);
 
-        DictItemContext StartDict();
+        DictContext StartDict();
 		Builder& EndDict();
 
-        ArrayItemContext  StartArray();
+        ArrayContext  StartArray();
 		Builder& EndArray();
 
 		json::Node Build();
 	};
 
-    class ItemContext {
+    class MethContext {
     public:
-        ItemContext(Builder& builder) :builder_(builder) {};
-        KeyItemContext Key(std::string key);
+        MethContext(Builder& builder) :builder_(builder) {};
+        KeyContext Key(std::string key);
         Builder& Value(json::Node value);
-        DictItemContext StartDict();
-        ArrayItemContext StartArray();
+        DictContext StartDict();
+        ArrayContext StartArray();
         Builder& EndDict();
         Builder& EndArray();
     private:
         Builder& builder_;
     };
 
-    class KeyItemContext :public ItemContext {
+    class KeyContext :public MethContext {
     public:
-        KeyItemContext(Builder& builder) :ItemContext(builder) {};
-        KeyItemContext Key(std::string key) = delete;
+        KeyContext(Builder& builder) :MethContext(builder) {};
+        KeyContext Key(std::string key) = delete;
         ValueContext Value(json::Node value);
         Builder& EndDict() = delete;
         Builder& EndArray() = delete;
     };
 
-    class ValueContext :public ItemContext {
+    class ValueContext :public MethContext {
     public:
-        ValueContext(Builder& builder) :ItemContext(builder) {};
+        ValueContext(Builder& builder) :MethContext(builder) {};
         Builder& Value(json::Node value) = delete;
-        DictItemContext StartDict() = delete;
-        ArrayItemContext StartArray() = delete;
+        DictContext StartDict() = delete;
+        ArrayContext StartArray() = delete;
         Builder& EndArray() = delete;
     };
 
-    class DictItemContext :public ItemContext {
+    class DictContext :public MethContext {
     public:
-        DictItemContext(Builder& builder) :ItemContext(builder) {};
+        DictContext(Builder& builder) :MethContext(builder) {};
         Builder& Value(json::Node value) = delete;
-        DictItemContext StartDict() = delete;
-        ArrayItemContext StartArray() = delete;
+        DictContext StartDict() = delete;
+        ArrayContext StartArray() = delete;
         Builder& EndArray() = delete;
     };
 
-    class ArrayItemContext :public ItemContext {
+    class ArrayContext :public MethContext {
     public:
-        ArrayItemContext(Builder& builder) :ItemContext(builder) {};
-        KeyItemContext Key(std::string key) = delete;
-        ArrayItemContext Value(json::Node value) { return ItemContext::Value(std::move(value)); }
+        ArrayContext(Builder& builder) :MethContext(builder) {};
+        KeyContext Key(std::string key) = delete;
+        ArrayContext Value(json::Node value) { return MethContext::Value(std::move(value)); }
         Builder& EndDict() = delete;
     };
 }

@@ -146,6 +146,16 @@ double TransportCatalogue::GetDistanceInfo(PairStops stops) {
 
 
 std::vector<types::Buses*> TransportCatalogue::GetAllBuses() const {
+	//vector<std::string> all_buses;
+	//all_buses.reserve(buses_.size());
+
+	//for (auto& [name, route] : buses_) {
+	//	if (route->route.empty() == false) {
+	//		all_buses.push_back(static_cast<string>(name));
+	//	}
+	//}
+
+	//std::sort(all_buses.begin(), all_buses.end());
 	std::vector<types::Buses*> buses;
 	for (const auto& [str_view, bus] : buses_) {
 		buses.push_back(bus);

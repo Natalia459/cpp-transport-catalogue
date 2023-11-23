@@ -18,15 +18,23 @@ namespace json {
 	};
 
 	//------------------- NODE -----------------------------------
-
+	class Node;
+	using Dict = std::map<std::string, Node>;
+	using Array = std::vector<Node>;
 	using Number = std::variant<int, double>;
-	class Node {
-	public:
-		using Array = std::vector<Node>;
-		using Dict = std::map<std::string, Node>;
-		using Value = std::variant<std::nullptr_t, bool, int, double, std::string, Array, Dict>;
+	class Builder;
 
-		//--------------- container ------------------------------
+	class Node final {
+	public:
+		using Value = std::variant<std::nullptr_t, bool, int, double, std::string, Array, Dict>;
+		friend Builder;
+		//	: private std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string> {
+		//public:
+		//	using variant::variant;
+		//	using Value = variant;
+		//	friend Builder;
+
+		//	//--------------- container ------------------------------
 
 		Node();
 		Node(std::nullptr_t ptr);
@@ -37,7 +45,7 @@ namespace json {
 		Node(double value);
 		Node(bool value);
 
-		//--------------- check_data -----------------------------
+		//	//--------------- check_data -----------------------------
 
 		bool IsInt() const;
 		bool IsDouble() const;
@@ -48,7 +56,7 @@ namespace json {
 		bool IsArray() const;
 		bool IsMap() const;
 
-		//--------------- get_data -------------------------------
+		//	//--------------- get_data -------------------------------
 
 		const Value& GetValue() const;
 		int AsInt() const;
@@ -60,19 +68,16 @@ namespace json {
 
 		//--------------- compare --------------------------------
 
-		inline bool operator==(Node other) const {
-			return data_ == other.data_;
+		bool operator==(const Node& rhs) const {
+			return GetValue() == rhs.GetValue();
 		}
 
 		inline bool operator!=(Node other) const {
 			return !(*this == other);
 		}
-
 	private:
 		Value data_;
 	};
-	using Array = Node::Array;
-	using Dict = Node::Dict;
 
 	//------------------ PRINT_CONTEXT ---------------------------
 
@@ -154,8 +159,70 @@ namespace json {
 	namespace print {
 		using namespace std::literals;
 
+		//std::string DeleteZeros(double num);
+
 		std::string String(const std::string& val);
 
 		void PrintValue(const json::Node::Value& val, const json::PrintContext& ctx);
+
+		//// Перегрузка функции PrintValue для вывода значений int
+		//inline void PrintValue(const int& val, const PrintContext& ctx) {
+		//	ctx.out << val;
+		//}
+		//// Перегрузка функции PrintValue для вывода значений double
+		//inline void PrintValue(const double& val, const PrintContext& ctx) {
+		//	ctx.out << val;
+		//}
+
+		//// Перегрузка функции PrintValue для вывода значений null
+		//inline void PrintValue(std::nullptr_t, const PrintContext& ctx) {
+		//	ctx.out << "null"sv;
+		//}
+
+		//// Перегрузка функции PrintValue для вывода значений bool
+		//inline void PrintValue(bool val, const PrintContext& ctx) {
+		//	ctx.out << std::boolalpha << val;
+		//}
+
+		//// Перегрузка функции PrintValue для вывода значений string
+		//inline void PrintValue(const std::string& val, const PrintContext& ctx) {
+		//	ctx.out << "\""sv << val << "\""sv;
+		//}
+
+		//// Перегрузка функции PrintValue для вывода значений std::vector<Node>
+		//inline void PrintValue(const std::vector<Node>& val, const PrintContext& ctx) {
+		//	ctx.out << "["sv;
+		//	PrintContext new_pt = ctx.Indented();
+		//	for (const auto& v : val) {
+		//		if (v != val.front()) {
+		//			ctx.out << ","sv << std::endl;
+		//		}
+		//		new_pt.PrintIndent();
+		//		std::visit(
+		//			[&ctx](const auto& v) { PrintValue(v, ctx); },
+		//			v.GetValue());
+		//	}
+		//	ctx.out << "]"sv << std::endl;
+		//}
+
+		//// Перегрузка функции PrintValue для вывода значений std::map<std::string, Node>
+		//inline void PrintValue(const std::map<std::string, Node>& val, const PrintContext& ctx) {
+		//	bool is_not_first = false;
+
+		//	ctx.out << "{"sv << std::endl;
+		//	for (const auto& [key, v] : val) {
+		//		
+		//		if (is_not_first) {
+		//			is_not_first = true;
+		//			ctx.out << ","sv << std::endl;
+		//		}
+		//		ctx.out << "\""sv << key << "\": "sv;
+
+		//		std::visit(
+		//			[&ctx](const auto& v) { PrintValue(v, ctx); },
+		//			v.GetValue());
+		//	}
+		//	ctx.out << std::endl << "}"sv;
+		//}
 	}
 }

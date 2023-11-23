@@ -1,6 +1,7 @@
 #include "json_reader.h"
 #include "request_handler.h"
 #include "map_renderer.h"
+#include "json_builder.h"
 
 #include <sstream>
 #include <string>
@@ -19,8 +20,8 @@ using namespace json;
 
 void JSONReader::ProcessData(std::istream& in, std::ostream& out) {
 	const Document doc = json::Load(in);
-	json::Dict render_data;
-	json::Array request_data;
+	json::Builder render_data;
+	json::Builder request_data;
 	std::vector<types::Buses*> buses;
 
 	for (const auto& [request_type, data] : doc.GetRoot().AsMap()) {
@@ -29,17 +30,17 @@ void JSONReader::ProcessData(std::istream& in, std::ostream& out) {
 			buses = move(AddData(data.AsArray()));
 		}
 		else if (request_type == "stat_requests") {
-			request_data = data.AsArray();
+			request_data.Value(data.AsArray());
 		}
 		else if (request_type == "render_settings"s) {
-			render_data = data.AsMap();
+			render_data.Value(data.AsMap());
 		}
 	}
 
-	if (render_data.empty() == false) {
-		if (request_data.empty() == false) {
+	if (render_data.Build().AsMap().empty() == false) {
+		if (request_data.Build().AsArray().empty() == false) {
 			RequestHandler handler(catalogue_);
-			handler.GetRequest(out, request_data, picture::GetRenderSettings(render_data, buses));
+			handler.GetRequest(out, request_data.Build(), picture::GetRenderSettings(render_data.Build(), buses));
 		}
 	}
 }

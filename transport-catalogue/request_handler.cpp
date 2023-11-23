@@ -17,9 +17,9 @@ using namespace types;
 //================================================================================================= OUTPUT
 
 
-void RequestHandler::GetRequest(std::ostream& out, const std::vector<json::Node>& requests, picture::Renderer render) {
-
-	for (const auto& info : requests) {
+void RequestHandler::GetRequest(std::ostream& out, const json::Node& requests, picture::Renderer render) {
+	req_answer_.StartArray();
+	for (const auto& info : requests.AsArray()) {
 		if (info.AsMap().empty()) {
 			continue;
 		}
@@ -35,13 +35,14 @@ void RequestHandler::GetRequest(std::ostream& out, const std::vector<json::Node>
 		}
 		else if (info.AsMap().at("type"s).AsString() == "Map"s) {
 			std::ostringstream ostr;
-			picture::RenderVector(ostr, render);
-
-			json::Dict mapa = { {"map"s, ostr.str()}, {"request_id"s, id} };
-			req_answer_.push_back(mapa);
+			RenderVector(ostr, render);
+			
+			json::Dict mapa = { {"map"s, ostr.str()}, {"request_id"s, id}};
+			req_answer_.Value(mapa);
 		}
 	}
-	json::Print(json::Document{ req_answer_ }, out);
+	req_answer_.EndArray();
+	json::Print(json::Document{ req_answer_.Build() }, out);
 }
 
 
@@ -49,18 +50,19 @@ void RequestHandler::Bus(int id, std::string&& bus) {
 
 	auto [exists, info] = catalogue_.GetBusInfo(move(bus));
 	if (exists) {
-		json::Dict bus_info;
-
-		bus_info.emplace("request_id"s, id);
-		bus_info.emplace("curvature"s, info.curv);
-		bus_info.emplace("route_length"s, info.length);
-		bus_info.emplace("stop_count"s, info.stops);
-		bus_info.emplace("unique_stop_count"s, info.uniq_stops);
-
-		req_answer_.push_back( bus_info);
+		req_answer_.StartDict().
+			Key("request_id"s).Value(id).
+			Key("curvature"s).Value(info.curv).
+			Key("route_length"s).Value(info.length).
+			Key("stop_count"s).Value(info.stops).
+			Key("unique_stop_count"s).Value(info.uniq_stops).
+			EndDict();
 	}
 	else {
-		req_answer_.push_back( json::Dict{ { "request_id"s, id}, {"error_message"s, "not found"s} });
+		req_answer_.StartDict().
+			Key("request_id"s).Value(id).
+			Key("error_message"s).Value("not found"s).
+			EndDict();
 	}
 }
 
@@ -69,17 +71,24 @@ void RequestHandler::Stop(int id, string&& stop) {
 
 	auto [exists, buses] = catalogue_.GetStopInfo(move(stop));
 	if (exists) {
-		json::Array buses_json;
+		json::Builder buses_json;
+		auto arr = buses_json.StartArray();
+
 		std::sort(buses.begin(), buses.end());
 		for (auto bus : buses) {
-			buses_json.push_back(static_cast<string>(bus));
+			arr.Value(static_cast<string>(bus));
 		}
+		buses_json.EndArray();
 
-		json::Dict stop_info{ {"buses"s, buses_json}, {"request_id"s, id} };
-
-		req_answer_.push_back( stop_info);
+		req_answer_.StartDict().
+			Key("buses"s).Value(buses_json.Build()).
+			Key("request_id"s).Value(id).
+			EndDict();
 	}
 	else {
-		req_answer_.push_back( json::Dict{ { "request_id"s, id}, {"error_message"s, "not found"s} });
+		req_answer_.StartDict().
+			Key("request_id"s).Value(id).
+			Key("error_message"s).Value("not found"s).
+			EndDict();
 	}
 }

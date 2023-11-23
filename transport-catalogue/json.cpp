@@ -252,7 +252,6 @@ Number load::LNumber(std::istream& input) {
 
 	std::string parsed_num;
 
-	// Считывает в parsed_num очередной символ из input
 	auto read_char = [&parsed_num, &input] {
 		parsed_num += static_cast<char>(input.get());
 		if (!input) {
@@ -260,7 +259,6 @@ Number load::LNumber(std::istream& input) {
 		}
 		};
 
-	// Считывает одну или более цифр в parsed_num из input
 	auto read_digits = [&input, read_char] {
 		if (!std::isdigit(input.peek())) {
 			throw ParsingError("A digit is expected"s);
@@ -273,24 +271,20 @@ Number load::LNumber(std::istream& input) {
 	if (input.peek() == '-') {
 		read_char();
 	}
-	// Парсим целую часть числа
 	if (input.peek() == '0') {
 		read_char();
-		// После 0 в JSON не могут идти другие цифры
 	}
 	else {
 		read_digits();
 	}
 
 	bool is_int = true;
-	// Парсим дробную часть числа
 	if (input.peek() == '.') {
 		read_char();
 		read_digits();
 		is_int = false;
 	}
 
-	// Парсим экспоненциальную часть числа
 	if (int ch = input.peek(); ch == 'e' || ch == 'E') {
 		read_char();
 		if (ch = input.peek(); ch == '+' || ch == '-') {
@@ -302,13 +296,10 @@ Number load::LNumber(std::istream& input) {
 
 	try {
 		if (is_int) {
-			// Сначала пробуем преобразовать строку в int
 			try {
 				return std::stoi(parsed_num);
 			}
 			catch (...) {
-				// В случае неудачи, например, при переполнении,
-				// код ниже попробует преобразовать строку в double
 			}
 		}
 		return std::stod(parsed_num);
@@ -318,8 +309,6 @@ Number load::LNumber(std::istream& input) {
 	}
 }
 
-// Считывает содержимое строкового литерала JSON-документа
-// Функцию следует использовать после считывания открывающего символа ":
 std::string load::String(std::istream& input) {
 	using namespace std::literals;
 
@@ -328,25 +317,20 @@ std::string load::String(std::istream& input) {
 	std::string s;
 	while (true) {
 		if (it == end) {
-			// Поток закончился до того, как встретили закрывающую кавычку?
 			throw ParsingError("String parsing error");
 		}
 		const char ch = *it;
 
 		if (ch == '"') {
-			// Встретили закрывающую кавычку
 			++it;
 			break;
 		}
 		else if (ch == '\\') {
-			// Встретили начало escape-последовательности
 			++it;
 			if (it == end) {
-				// Поток завершился сразу после символа обратной косой черты
 				throw ParsingError("String parsing error");
 			}
 			const char escaped_char = *(it);
-			// Обрабатываем одну из последовательностей: \\, \n, \t, \r, \"
 			switch (escaped_char) {
 			case 'n':
 				s.push_back('\n');
@@ -364,16 +348,13 @@ std::string load::String(std::istream& input) {
 				s.push_back('\\');
 				break;
 			default:
-				// Встретили неизвестную escape-последовательность
 				throw ParsingError("Unrecognized escape sequence \\"s + escaped_char);
 			}
 		}
 		else if (ch == '\n' || ch == '\r') {
-			// Строковый литерал внутри- JSON не может прерываться символами \r или \n
 			throw ParsingError("Unexpected end of line"s);
 		}
 		else {
-			// Просто считываем очередной символ и помещаем его в результирующую строку
 			s.push_back(ch);
 		}
 		++it;
@@ -382,8 +363,6 @@ std::string load::String(std::istream& input) {
 	return s;
 }
 
-//если достигнут конец последовательности, возвращается нулевой итератор
-// если найден следующий разделитель вернет его
 bool load::FindNextDivider(std::istream& input, char end_sequence) {
 	auto it = std::istreambuf_iterator<char>(input);
 	auto end = std::istreambuf_iterator<char>();
@@ -533,12 +512,7 @@ std::string print::String(const std::string& val) {
 	std::string s = "";
 	for (auto c : val) {
 
-		// Встретили начало escape-последовательности
 		if (static_cast<int>(c) <= 34 || static_cast<int>(c) == 92) {//
-			// Обрабатываем одну из последовательностей: \\, \n, \t, \r, \"
-			// При чтении строкового литерала последовательности \r,\n,\t,\\,\"
-			// должны преобразовываться в соответствующие символы.
-			// При выводе эти символы должны экранироваться, кроме \t.
 			switch (c) {
 			case '\n':
 				s += "\\n"s;
@@ -550,7 +524,6 @@ std::string print::String(const std::string& val) {
 				s += "\\r"s;
 				break;
 			case '\"':
-				//s += "\\";
 				s += "\\\""s;
 				break;
 			case '\\':
@@ -592,7 +565,7 @@ void print::PrintValue(const Node::Value& val, const PrintContext& ctx) {
 	else if (holds_alternative<Array>(val)) {
 		bool is_not_first = false;
 
-		ctx.out << "["sv<< std::endl;
+		ctx.out << "["sv << std::endl;
 		const PrintContext new_pt = ctx.Indented();
 
 		auto vec = get<Array>(val);

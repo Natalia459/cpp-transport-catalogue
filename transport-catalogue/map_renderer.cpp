@@ -7,13 +7,12 @@ using namespace transport_catalogue;
 using namespace picture;
 using namespace svg;
 
-Renderer picture::GetRenderSettings(const json::Dict& settings, const std::vector<types::Buses*>& data) {
-	Settings sett(settings);
+Renderer picture::GetRenderSettings(const json::Node& settings, const std::vector<types::Buses*>& data) {
+	Settings sett(settings.AsMap());
 
-	if (settings.empty()) {
+	if (settings.AsMap().empty()) {
 		return Renderer{};
 	}
-
 	vector<details::Coordinates> coord;
 	for (const auto& bus : data) {
 		if (!bus->route.empty()) {
@@ -49,7 +48,6 @@ Color picture::ReadColor(json::Node color) {
 }
 
 void picture::Renderer::RenderSettings(const std::vector<types::Buses*>& data) {
-
 	map<string, svg::Point> stops;
 	vector<BusInfo> buses;
 	size_t color_number = 0;
@@ -137,27 +135,48 @@ picture::Settings::Settings(json::Dict settings) {
 //---------------- set_characters --------------------------------------------------------------
 
 void picture::Renderer::SetPolylineCharacters(svg::Polyline& line, size_t color_number) {
-	line.SetStrokeWidth(settings_.line_width).SetStrokeColor(settings_.color_palette[color_number]);
-	line.SetFillColor("none").SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+	line.SetStrokeWidth(settings_.line_width).
+		SetStrokeColor(settings_.color_palette[color_number]);
+	line.SetFillColor("none").
+		SetStrokeLineCap(svg::StrokeLineCap::ROUND).
+		SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 }
 
 void picture::Renderer::SetBusCharacters(Text2D& bus_name, size_t color_number) {
-	bus_name.text.SetFontSize(settings_.bus_label_font_size).SetOffset(settings_.bus_label_offset).SetFontFamily("Verdana").SetFontWeight("bold");
-	bus_name.text.SetFillColor(settings_.color_palette[color_number]);
+	bus_name.text.SetFontSize(settings_.bus_label_font_size).
+		SetOffset(settings_.bus_label_offset).
+		SetFontFamily("Verdana").
+		SetFontWeight("bold").
+		SetFillColor(settings_.color_palette[color_number]);
 
-	bus_name.underlayer.SetFontSize(settings_.bus_label_font_size).SetOffset(settings_.bus_label_offset).SetFontFamily("Verdana");
-	bus_name.underlayer.SetFillColor(settings_.underlayer_color).SetFontWeight("bold").SetStrokeWidth(settings_.underlayer_width);
-	bus_name.underlayer.SetStrokeColor(settings_.underlayer_color).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+	bus_name.underlayer.SetFontSize(settings_.bus_label_font_size).
+		SetOffset(settings_.bus_label_offset).
+		SetFontFamily("Verdana").
+		SetFillColor(settings_.underlayer_color).
+		SetFontWeight("bold").
+		SetStrokeWidth(settings_.underlayer_width).
+		SetStrokeColor(settings_.underlayer_color).
+		SetStrokeLineCap(svg::StrokeLineCap::ROUND).
+		SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 }
 
 void picture::Renderer::SetStopCharacters(Text2D& names) {
 	auto& text = names.text;
 	auto& under_text = names.underlayer;
 
-	text.SetFontSize(settings_.stop_label_font_size).SetOffset(settings_.stop_label_offset).SetFontFamily("Verdana").SetFillColor("black");
-	under_text.SetFontSize(settings_.stop_label_font_size).SetFillColor(settings_.underlayer_color).SetStrokeColor(settings_.underlayer_color);
-	under_text.SetStrokeWidth(settings_.underlayer_width).SetOffset(settings_.stop_label_offset).SetFontFamily("Verdana");
-	under_text.SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+	text.SetFontSize(settings_.stop_label_font_size).
+		SetOffset(settings_.stop_label_offset).
+		SetFontFamily("Verdana").
+		SetFillColor("black");
+
+	under_text.SetFontSize(settings_.stop_label_font_size).
+		SetFillColor(settings_.underlayer_color).
+		SetStrokeColor(settings_.underlayer_color).
+		SetStrokeWidth(settings_.underlayer_width).
+		SetOffset(settings_.stop_label_offset).
+		SetFontFamily("Verdana").
+		SetStrokeLineCap(svg::StrokeLineCap::ROUND).
+		SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 }
 
 //---------------- add_chracters ---------------------------------------------------------------
@@ -175,7 +194,9 @@ void picture::Renderer::AddPolylinePoints(std::vector<svg::Point>&& points, size
 void picture::Renderer::AddCirclePoints(const std::map<std::string, svg::Point>& stops) {
 	for (const auto& [name, point] : stops) {
 		circles_.push_back(svg::Circle{});
-		circles_.back().SetCenter(point).SetRadius(settings_.stop_radius).SetFillColor("white");
+		circles_.back().SetCenter(point).
+			SetRadius(settings_.stop_radius).
+			SetFillColor("white");
 	}
 }
 

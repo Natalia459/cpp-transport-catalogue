@@ -3,7 +3,7 @@
 
 using namespace json;
 
-KeyContext Builder::Key(std::string&& key) {
+Builder::DictValueContext Builder::Key(std::string&& key) {
 	if ((nodes_stack_.empty() || !nodes_stack_.back()->IsMap())) {
 		throw std::logic_error("Key called before building dictionary");
 	}
@@ -31,7 +31,7 @@ Builder& Builder::Value(json::Node&& value) {
 	return *this;
 }
 
-DictContext Builder::StartDict() {
+Builder::DictKeyContext Builder::StartDict() {
 	if (nodes_stack_.empty()) {
 		throw std::logic_error("Node isn't exist, can't start dict");
 	}
@@ -55,7 +55,7 @@ Builder& Builder::EndDict() {
 	return *this;
 }
 
-ArrayContext  Builder::StartArray() {
+Builder::ArrayContext Builder::StartArray() {
 	if (nodes_stack_.empty()) {
 		throw std::logic_error("Node isn't exist, can't build array");
 	}
@@ -83,31 +83,31 @@ Node Builder::Build() {
 
 	return root_;
 }
+Node Builder::BaseContext::Build() {
+	return builder_.Build();
+}
 
-KeyContext MethContext::Key(std::string key) {
+
+Builder::DictValueContext Builder::BaseContext::Key(std::string key) {
 	return builder_.Key(std::move(key));
 }
 
-Builder& MethContext::Value(Node value) {
+Builder& Builder::BaseContext::Value(Node value) {
 	return builder_.Value(std::move(value));
 }
 
-DictContext MethContext::StartDict() {
+Builder::DictKeyContext Builder::BaseContext::StartDict() {
 	return builder_.StartDict();
 }
 
-ArrayContext MethContext::StartArray() {
+Builder::ArrayContext Builder::BaseContext::StartArray() {
 	return builder_.StartArray();
 }
 
-Builder& MethContext::EndDict() {
+Builder& Builder::BaseContext::EndDict() {
 	return builder_.EndDict();
 }
 
-Builder& MethContext::EndArray() {
+Builder& Builder::BaseContext::EndArray() {
 	return builder_.EndArray();
-}
-
-ValueContext KeyContext::Value(Node value) {
-	return MethContext::Value(std::move(value));
 }

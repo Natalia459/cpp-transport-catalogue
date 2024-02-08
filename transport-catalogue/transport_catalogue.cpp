@@ -21,7 +21,7 @@ Stops* TransportCatalogue::AddStop(string& name, double lat, double lon) {
 }
 
 
-Stops* TransportCatalogue::FindStop(string_view name) {
+Stops* TransportCatalogue::FindStop(string_view name) const {
 	auto stop = stops_.find(name);
 	if (stop == stops_.end()) {
 		return nullptr;
@@ -56,7 +56,7 @@ void TransportCatalogue::AddDistance(PairStops stops, double dist) {
 }
 
 
-std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) {
+std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) const {
 	auto bus = buses_.find(name);
 	bool found = true;
 
@@ -69,8 +69,7 @@ std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) {
 	int routes = static_cast<int>(bus->second->route.size());
 	vector<Stops*> stops = bus->second->route;
 	set<Stops*> uniq;
-	double length = 0;
-	double curv = 0, lin_curv = 0;
+	double length = 0, curv = 0, lin_curv = 0;
 
 	for (size_t i = 1; i < stops.size(); ++i) {
 		Coordinates coo{ stops[i - 1]->lati, stops[i - 1]->longi };
@@ -103,7 +102,7 @@ std::pair<bool, BusInfo> TransportCatalogue::GetBusInfo(std::string_view name) {
 }
 
 
-std::pair<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(std::string_view stop) {
+std::pair<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(std::string_view stop) const  {
 	auto st = FindStop(stop);
 	vector<string_view> buses;
 	bool exists = true;
@@ -126,7 +125,7 @@ std::pair<bool, std::vector<std::string_view>> TransportCatalogue::GetStopInfo(s
 }
 
 
-double TransportCatalogue::GetDistanceInfo(PairStops stops) {
+double TransportCatalogue::GetDistanceInfo(PairStops stops) const {
 
 	//if between a-b and b-a are different distances
 	auto found = distance_.find(stops);
@@ -134,7 +133,7 @@ double TransportCatalogue::GetDistanceInfo(PairStops stops) {
 		return distance_.at(stops);
 	}
 
-	//id a-b == b-a
+	//if a-b == b-a
 	found = distance_.find({ stops.second, stops.first });
 	if (found != distance_.end()) {
 		return distance_.at({ stops.second, stops.first });
@@ -146,17 +145,8 @@ double TransportCatalogue::GetDistanceInfo(PairStops stops) {
 
 
 std::vector<types::Buses*> TransportCatalogue::GetAllBuses() const {
-	//vector<std::string> all_buses;
-	//all_buses.reserve(buses_.size());
-
-	//for (auto& [name, route] : buses_) {
-	//	if (route->route.empty() == false) {
-	//		all_buses.push_back(static_cast<string>(name));
-	//	}
-	//}
-
-	//std::sort(all_buses.begin(), all_buses.end());
 	std::vector<types::Buses*> buses;
+	buses.reserve(buses_.size());
 	for (const auto& [str_view, bus] : buses_) {
 		buses.push_back(bus);
 	}
@@ -166,4 +156,17 @@ std::vector<types::Buses*> TransportCatalogue::GetAllBuses() const {
 		});
 
 	return buses;
+}
+
+size_t TransportCatalogue::GetStopsCount() const {
+	return stops_.size();
+}
+
+std::vector<types::Stops*> TransportCatalogue::GetAllStops() const {
+	std::vector<types::Stops*> stops;
+	stops.reserve(stops_.size());
+	for (const auto& [name, stop] : stops_) {
+		stops.push_back(stop);
+	}
+	return stops;
 }

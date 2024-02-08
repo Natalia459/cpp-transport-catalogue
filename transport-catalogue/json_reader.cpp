@@ -19,10 +19,12 @@ using namespace json;
 
 
 void JSONReader::ProcessData(std::istream& in, std::ostream& out) {
+
 	const Document doc = json::Load(in);
 	json::Builder render_data;
 	json::Builder request_data;
 	std::vector<types::Buses*> buses;
+	types::RouterSettings setts;
 
 	for (const auto& [request_type, data] : doc.GetRoot().AsMap()) {
 
@@ -35,17 +37,24 @@ void JSONReader::ProcessData(std::istream& in, std::ostream& out) {
 		else if (request_type == "render_settings"s) {
 			render_data.Value(data.AsMap());
 		}
+		else if (request_type == "routing_settings"s) {
+			setts = GetRouterSettings(data.AsMap());
+		}
 	}
+	router::TransportRouter router(catalogue_);
+	router.SetRouterSettings(setts);
+	router.FillGraph();
 
 	if (render_data.Build().AsMap().empty() == false) {
 		if (request_data.Build().AsArray().empty() == false) {
-			RequestHandler handler(catalogue_);
-			handler.GetRequest(out, request_data.Build(), picture::GetRenderSettings(render_data.Build(), buses));
+			RequestHandler handler(catalogue_, picture::GetRenderSettings(render_data.Build(), buses), router);
+			handler.GetRequest(out, request_data.Build());
 		}
 	}
 }
 
 std::vector<types::Buses*> JSONReader::AddData(const Array& data) {
+
 	vector<DistanceForStops> dists;
 	vector<json::Dict> buses;
 
@@ -87,6 +96,7 @@ void JSONReader::Stop(const json::Dict& stop) {
 
 
 void JSONReader::Distances(std::string&& stop, std::string&& another_stop, double dist) {
+
 	Stops* stop1 = catalogue_.FindStop(stop);
 	Stops* stop2 = catalogue_.FindStop(another_stop);
 
@@ -108,4 +118,10 @@ void JSONReader::Bus(const json::Dict& bus) {
 		stops_ptr.push_back(catalogue_.FindStop(stop.AsString()));
 	}
 	catalogue_.AddBus(move(name), move(stops_ptr), is_round);
+}
+
+types::RouterSettings JSONReader::GetRouterSettings(const json::Dict& setts) const {
+	double velocity = setts.at("bus_velocity").AsDouble();
+	int time = setts.at("bus_wait_time").AsInt();
+	return { velocity, time };
 }

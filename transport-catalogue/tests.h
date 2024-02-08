@@ -84,5 +84,21 @@ namespace transport_catalogue {
 			
 			void Test3();
 		}
+
+		namespace route {
+			void TestExample1();
+
+			void TestExample2();
+
+			void TestExample3();
+
+			void TestExample4();
+
+			void TestAccidentally1();
+
+			void TestAccidentally2();
+
+			void TestAccidentally3();
+		}
 	}
 }

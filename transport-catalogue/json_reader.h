@@ -33,5 +33,7 @@ namespace transport_catalogue {
 		void Bus(const json::Dict& bus);
 
 		void Distances(std::string&& stop, std::string&& another_stop, double dist);
+
+		types::RouterSettings GetRouterSettings(const json::Dict& setts ) const;
 	};
 }

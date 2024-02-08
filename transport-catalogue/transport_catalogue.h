@@ -25,20 +25,24 @@ namespace transport_catalogue {
 
 		types::Stops* AddStop(std::string& name, double lat, double lon);
 
-		types::Stops* FindStop(std::string_view name);
+		types::Stops* FindStop(std::string_view name) const ;
 
-		std::pair<bool, std::vector<std::string_view>> GetStopInfo(std::string_view name);
+		std::pair<bool, std::vector<std::string_view>> GetStopInfo(std::string_view name) const;
 
 		types::Buses* AddBus(std::string&& name, std::vector<types::Stops*>&& stops, bool is_circle = true);
 
 		types::Buses* FindBus(std::string_view name);
 
-		std::pair<bool, types::BusInfo> GetBusInfo(std::string_view name);
+		std::pair<bool, types::BusInfo> GetBusInfo(std::string_view name) const;
 
 		void AddDistance(types::PairStops stops, double dist);
 		 
-		double GetDistanceInfo(types::PairStops stops);
+		double GetDistanceInfo(types::PairStops stops) const;
 
-		std::vector<types::Buses*> GetAllBuses() const ;
+		std::vector<types::Buses*> GetAllBuses() const;
+
+		size_t GetStopsCount() const;
+
+		std::vector<types::Stops*> GetAllStops() const;
 	};
 }
